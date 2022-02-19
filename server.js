@@ -9,13 +9,36 @@ const API_KEY = process.env.API_KEY;
 
 app.use(express.json());
 
-const user = {
-  customer_id: "9PzJbto7sc",
-  external_id: "3"
+const test_customers = {
+  flutter: {
+    id: "6CoCFjzeXJ",
+    external_id: "flutter_sdk_test_customer",
+    access_token:
+      "6CoCFjzeXJ_secret_f4bf0b8e2bf8a3f8495ed17ac74cef7ee76229a8c794009f41dd3a01bc901f94",
+  },
+  ios: {
+    id: "o7z5cdgS1y",
+    external_id: "ios_sdk_test_customer",
+    access_token:
+      "o7z5cdgS1y_secret_ce29b4fc608a63e4b069e26037c231c0e1afa2fce577fec99653c45bdbbdc2bb",
+  },
+  android: {
+    id: "AWBqRMOwka",
+    external_id: "android_sdk_test_customer",
+    access_token:
+      "AWBqRMOwka_secret_692f44484a490c3bbab0ce741798212518ed50d9afdfb733a4927547dcc81a0c",
+  },
 };
 
 app.post("/checkout", async (req, res) => {
   const price = req.body.price;
+  var platform = req.query.platform;
+
+  if (!platform) {
+    res.status(400);
+    res.json({ error: "platform must be present!" });
+    return;
+  }
 
   if (!price) {
     res.status(400);
@@ -23,22 +46,49 @@ app.post("/checkout", async (req, res) => {
     return;
   }
 
+  var platform = platform.toLowerCase();
+
+  if (platform !== "ios" && platform !== "android" && platform !== "flutter") {
+    res.status(400);
+    res.json({ error: "platform must be either ios, android or flutter!" });
+  }
+
+  const customer = test_customers[platform];
+
   try {
-    const order_access_token = await createOrder(price);
-    const customer_access_token = await getCustomerById(user.customer_id);
+    const order_access_token = await create_order(price);
+    const customer_access_token = await get_customer_by_id(customer.id);
     res.status(200);
     res.json({ order_access_token, customer_access_token });
   } catch (error) {
+    res.status(502);
     res.json({ error: error.message });
   }
 });
 
 app.get("/profile", async (req, res) => {
-  const token = await getCustomerById(user.customer_id);
-  res.json({ token: token });
+  var platform = req.query.platform;
+
+  if (!platform) {
+    res.status(400);
+    res.json({ error: "platform must be present!" });
+    return;
+  }
+
+  platform = platform.toLowerCase()
+
+  if (platform !== "ios" && platform !== "android" && platform !== "flutter") {
+    res.status(400);
+    res.json({ error: "platform must be either ios, android or flutter!" });
+  }
+
+  const customer = test_customers[platform];
+  const customer_access_token = await get_customer_by_id(customer.id);
+  res.status(200);
+  res.json({ customer_access_token });
 });
 
-const createOrder = async (price) => {
+const create_order = async (price) => {
   const result = await fetch(`${BASE_URL}/orders`, {
     method: "POST",
     body: JSON.stringify({ amount: price }),
@@ -48,17 +98,7 @@ const createOrder = async (price) => {
   return response.order.access_token;
 };
 
-const createCustomer = async (external_id) => {
-  const result = await fetch(`${BASE_URL}/customers`, {
-    method: "POST",
-    body: JSON.stringify({ external_id }),
-    headers: { "API-KEY": API_KEY },
-  });
-  const response = await result.json();
-  return response.customer.access_token;
-};
-
-const getCustomerById = async (customer_id) => {
+const get_customer_by_id = async (customer_id) => {
   const result = await fetch(`${BASE_URL}/customers/${customer_id}`, {
     method: "GET",
   });
