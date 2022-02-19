@@ -51,6 +51,7 @@ app.post("/checkout", async (req, res) => {
   if (platform !== "ios" && platform !== "android" && platform !== "flutter") {
     res.status(400);
     res.json({ error: "platform must be either ios, android or flutter!" });
+    return;
   }
 
   const customer = test_customers[platform];
@@ -75,11 +76,12 @@ app.get("/profile", async (req, res) => {
     return;
   }
 
-  platform = platform.toLowerCase()
+  platform = platform.toLowerCase();
 
   if (platform !== "ios" && platform !== "android" && platform !== "flutter") {
     res.status(400);
     res.json({ error: "platform must be either ios, android or flutter!" });
+    return;
   }
 
   const customer = test_customers[platform];
