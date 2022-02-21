@@ -3,9 +3,9 @@ const express = require("express");
 require("dotenv").config();
 const app = express();
 
-const PORT = 1337;
 const BASE_URL = process.env.BASE_URL;
 const API_KEY = process.env.API_KEY;
+const PORT = process.env.PORT || 1337;
 
 app.use(express.json());
 
@@ -29,6 +29,10 @@ const test_customers = {
       "AWBqRMOwka_secret_692f44484a490c3bbab0ce741798212518ed50d9afdfb733a4927547dcc81a0c",
   },
 };
+
+app.get("/", async (req, res) => {
+  res.json({ status: "ok" });
+});
 
 app.post("/checkout", async (req, res) => {
   const price = req.body.price;
@@ -107,6 +111,7 @@ const get_customer_by_id = async (customer_id) => {
   const response = await result.json();
   return response.access_token;
 };
+
 
 app.listen(PORT, function (err) {
   if (err) console.log(err);
