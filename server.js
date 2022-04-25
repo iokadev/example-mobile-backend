@@ -61,7 +61,7 @@ app.post("/checkout", async (req, res) => {
   const customer = test_customers[platform];
 
   try {
-    const order_access_token = await create_order(price);
+    const order_access_token = await create_order(price, customer.id);
     const customer_access_token = await get_customer_by_id(customer.id);
     res.status(200);
     res.json({ order_access_token, customer_access_token });
@@ -94,10 +94,10 @@ app.get("/profile", async (req, res) => {
   res.json({ customer_access_token });
 });
 
-const create_order = async (price) => {
+const create_order = async (price, customer_id) => {
   const result = await fetch(`${BASE_URL}/orders`, {
     method: "POST",
-    body: JSON.stringify({ amount: price }),
+    body: JSON.stringify({ amount: price, customer_id }),
     headers: { "Content-Type": "application/json", "API-KEY": API_KEY },
   });
   const response = await result.json();
@@ -111,7 +111,6 @@ const get_customer_by_id = async (customer_id) => {
   const response = await result.json();
   return response.access_token;
 };
-
 
 app.listen(PORT, function (err) {
   if (err) console.log(err);
